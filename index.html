@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الإحصاءات للمنافذ التجارية</title>
+      <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .date-input {
+            margin: 15px 0;
+            text-align: center;
+        }
+        .date-input label {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .counter {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #eee;
+            border-radius: 5px;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #1565C0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0D47A1;
+        }
+        .undo-btn {
+            background-color: #C62828;
+            grid-column: span 2;
+        }
+        .undo-btn:hover {
+            background-color: #B71C1C;
+        }
+        .report-btn {
+            background-color: #2E7D32;
+            grid-column: span 2;
+        }
+        .report-btn:hover {
+            background-color: #1B5E20;
+        }
+        .new-report-btn {
+            background-color: #EF6C00;
+            grid-column: span 2;
+        }
+        .new-report-btn:hover {
+            background-color: #E65100;
+        }
+        .download-btn {
+            background-color: #6A1B9A;
+            grid-column: span 2;
+        }
+        .download-btn:hover {
+            background-color: #4A148C;
+        }
+        .note-btn {
+            background-color: #0097A7;
+            grid-column: span 2;
+        }
+        .note-btn:hover {
+            background-color: #006064;
+        }
+        .report {
+            margin-top: 30px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            padding: 8px 20px;
+        }
+        .history {
+            margin-top: 30px;
+        }
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .note-form {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, 
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .save-note-btn {
+            background-color: #2E7D32;
+            color: white;
+        }
+        .cancel-note-btn {
+            background-color: #C62828;
+            color: white;
+        }
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>نظام الإحصاءات للمنافذ التجارية</h1>
+        
+        <div class="date-input">
+            <label for="reportDate">تاريخ التقرير:</label>
+            <input type="date" id="reportDate">
+        </div>
+        
+        <div class="counter" id="counter">0</div>
+        
+        <div class="buttons">
+            <button id="btn1">منافذ مشتركة بالخدمه مسبقا</button>
+            <button id="btn2">منافذ تم توقيعها اليوم</button>
+            <button id="btn3">منافذ لا يوجد مالكها</button>
+            <button id="btn4">منافذ لا تمتلك لوحة تيليكود</button>
+            <button id="btn5">منافذ رافضين الخدمة</button>
+            <button id="btn6">منافذ وكلاء</button>
+            <button id="btn7">منافذ بمشاكل أخرى</button>
+            
+            <button class="note-btn" id="noteBtn">إضافة ملاحظة</button>
+            <button class="undo-btn" id="undoBtn">تراجع عن آخر ضغطة</button>
+            <button class="report-btn" id="reportBtn">عرض التقرير</button>
+            <button class="download-btn" id="downloadBtn">تنزيل التقرير (CSV)</button>
+            <button class="new-report-btn" id="newReportBtn">تقرير جديد</button>
+        </div>
+        
+        <div class="status-message" id="statusMessage"></div>
+        
+        <div class="note-form" id="noteForm">
+            <div class="form-group">
+                <label for="outletName">اسم المنفذ:</label>
+                <input type="text" id="outletName" placeholder="أدخل اسم المنفذ">
+            </div>
+            <div class="form-group">
+                <label for="noteText">الملاحظة:</label>
+                <textarea id="noteText" placeholder="أدخل الملاحظة هنا" rows="3"></textarea>
+            </div>
+            <div class="form-buttons">
+                <button class="save-note-btn" id="saveNoteBtn">حفظ الملاحظة</button>
+                <button class="cancel-note-btn" id="cancelNoteBtn">إلغاء</button>
+            </div>
+        </div>
+        
+        <div class="report" id="report">
+            <h2>التقرير الإحصائي</h2>
+            <table id="reportTable">
+                <tr>
+                    <th>البيان</th>
+                    <th>العدد</th>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="history" id="history">
+            <h3>سجل التقارير</h3>
+            <div id="historyList"></div>
+        </div>
+        
+        <div class="instructions">
+            <h3>تعليمات الاستخدام:</h3>
+            <ul>
+                <li>اضغط على الأزرار لزيادة العداد لكل فئة من المنافذ</li>
+                <li>استخدم زر "تراجع" لإلغاء آخر عملية ضغط</li>
+                <li>أضف ملاحظات لأي منفذ باستخدام زر "إضافة ملاحظة"</li>
+                <li>عرض التقرير الحالي باستخدام زر "عرض التقرير"</li>
+                <li>تنزيل التقرير بصيغة CSV باستخدام الزر المخصص</li>
+                <li>أنشئ تقريراً جديداً بعد الانتهاء من التقرير الحالي</li>
+                <li><strong>ملاحظة:</strong> البيانات لن تحفظ عند إغلاق المتصفح</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage">هل أنت متأكد أنك تريد إنشاء تقرير جديد؟</p>
+            <div class="modal-buttons">
+                <button id="confirmYes">نعم</button>
+                <button id="confirmNo">لا</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // متغيرات التطبيق
+        let totalCount = 0;
+        let buttonCounts = [0, 0, 0, 0, 0, 0, 0];
+        let lastPressedButton = null;
+        let reportsHistory = [];
+        let canUndo = false;
+        let notesList = [];
+        let currentNoteNumber = 0;
+        
+        // عناصر DOM
+        const counterElement = document.getElementById('counter');
+        const reportDateInput = document.getElementById('reportDate');
+        const btn1 = document.getElementById('btn1');
+        const btn2 = document.getElementById('btn2');
+        const btn3 = document.getElementById('btn3');
+        const btn4 = document.getElementById('btn4');
+        const btn5 = document.getElementById('btn5');
+        const btn6 = document.getElementById('btn6');
+        const btn7 = document.getElementById('btn7');
+        const undoBtn = document.getElementById('undoBtn');
+        const reportBtn = document.getElementById('reportBtn');
+        const newReportBtn = document.getElementById('newReportBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const noteBtn = document.getElementById('noteBtn');
+        const noteForm = document.getElementById('noteForm');
+        const saveNoteBtn = document.getElementById('saveNoteBtn');
+        const cancelNoteBtn = document.getElementById('cancelNoteBtn');
+        const outletNameInput = document.getElementById('outletName');
+        const noteTextInput = document.getElementById('noteText');
+        const reportElement = document.getElementById('report');
+        const reportTable = document.getElementById('reportTable');
+        const historyList = document.getElementById('historyList');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+        const statusMessage = document.getElementById('statusMessage');
+        const modalMessage = document.getElementById('modalMessage');
+        
+        // أسماء الأزرار
+        const buttonNames = [
+            "منافذ مشتركة بالخدمه مسبقا",
+            "منافذ تم توقيعها اليوم",
+            "منافذ لا يوجد مالكها",
+            "منافذ لا تمتلك لوحة تيليكود",
+            "منافذ رافضين الخدمة",
+            "منافذ وكلاء",
+            "منافذ بمشاكل أخرى"
+        ];
+        
+        // تعيين التاريخ الحالي كقيمة افتراضية
+        function setDefaultDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            reportDateInput.value = `${year}-${month}-${day}`;
+        }
+        
+        // عرض رسالة حالة
+        function showStatusMessage(message, isSuccess = true) {
+            statusMessage.textContent = message;
+            statusMessage.className = isSuccess ? 'status-message success' : 'status-message error';
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+        
+        // تحديث العداد
+        function updateCounter() {
+            counterElement.textContent = totalCount;
+        }
+        
+        // معالجة الضغط على الأزرار
+        function handleButtonClick(buttonIndex) {
+            totalCount++;
+            buttonCounts[buttonIndex]++;
+            lastPressedButton = buttonIndex;
+            canUndo = true;
+            updateCounter();
+            showStatusMessage("تم إضافة " + buttonNames[buttonIndex] + " بنجاح");
+        }
+        
+        // التراجع عن آخر ضغطة
+        function undoLastPress() {
+            if (lastPressedButton !== null && canUndo) {
+                totalCount--;
+                buttonCounts[lastPressedButton]--;
+                updateCounter();
+                lastPressedButton = null;
+                canUndo = false;
+                return true;
+            }
+            return false;
+        }
+        
+        // إنشاء تقرير
+        function generateReport() {
+            // مسح الجدول الحالي (إبقاء الصف الأول)
+            while (reportTable.rows.length > 1) {
+                reportTable.deleteRow(1);
+            }
+            
+            // إضافة البيانات إلى الجدول
+            addReportRow("إجمالي عدد المنافذ", totalCount);
+            
+            for (let i = 0; i < buttonCounts.length; i++) {
+                addReportRow(buttonNames[i], buttonCounts[i]);
+            }
+            
+            // إضافة الملاحظات إذا وجدت
+            if (notesList.length > 0) {
+                addReportRow("الملاحظات", "", true);
+                
+                notesList.forEach(note => {
+                    const noteRow = reportTable.insertRow();
+                    const noteCell1 = noteRow.insertCell(0);
+                    const noteCell2 = noteRow.insertCell(1);
+                    
+                    noteCell1.colSpan = 2;
+                    noteCell1.style.textAlign = "right";
+                    noteCell1.style.padding = "15px";
+                    noteCell1.style.backgroundColor = "#f9f9f9";
+                    noteCell1.innerHTML = `
+                        <div style="font-weight: bold; color: #1565C0; margin-bottom: 8px;">
+                            #${note.number} - ${note.outletName}
+                        </div>
+                        <div style="background: #e3f2fd; padding: 12px; border-radius: 6px; border-right: 3px solid #64b5f6;">
+                            ${note.text}
+                        </div>
+                    `;
+                });
+            }
+            
+            reportElement.style.display = 'block';
+            showStatusMessage("تم إنشاء التقرير بنجاح");
+        }
+        
+        // إضافة صف إلى التقرير
+        function addReportRow(label, value, isHeader = false) {
+            const row = reportTable.insertRow();
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            
+            cell1.textContent = label;
+            cell2.textContent = value;
+            
+            if (isHeader) {
+                cell1.style.fontWeight = "bold";
+                cell1.style.backgroundColor = "#e3f2fd";
+                cell1.style.fontSize = "1.1em";
+                cell2.style.fontWeight = "bold";
+                cell2.style.backgroundColor = "#e3f2fd";
+                cell2.style.fontSize = "1.1em";
+            }
+        }
+        
+        // حفظ التقرير في السجل
+        function saveReportToHistory() {
+            const selectedDate = reportDateInput.value ? new Date(reportDateInput.value) : new Date();
+            const reportDate = selectedDate.toLocaleDateString('ar-EG');
+            const reportData = {
+                date: reportDate,
+                total: totalCount,
+                counts: [...buttonCounts],
+                notes: [...notesList]
+            };
+            
+            reportsHistory.push(reportData);
+            updateHistoryList();
+        }
+        
+        // تحديث قائمة السجل
+        function updateHistoryList() {
+            historyList.innerHTML = '';
+            
+            reportsHistory.forEach((report, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div><strong>التقرير ${index + 1}:</strong> ${report.date}</div>
+                    <div><strong>المجموع:</strong> ${report.total}</div>
+                    <div><strong>عدد الملاحظات:</strong> ${report.notes.length}</div>
+                `;
+                historyList.appendChild(item);
+            });
+        }
+        
+        // تنزيل التقرير كملف CSV
+        function downloadCSV() {
+            if (totalCount === 0) {
+                showStatusMessage("لا يوجد بيانات لتنزيلها", false);
+                return;
+            }
+            
+            try {
+                // تاريخ التقرير
+                const selectedDate = reportDateInput.value ? new Date(reportDateInput.value) : new Date();
+                const formattedDate = selectedDate.toLocaleDateString('ar-EG');
+                const dateStr = selectedDate.toISOString().slice(0, 10);
+                
+                // بناء محتوى CSV
+                let csvContent = "بيان,عدد\r\n";
+                
+                // إضافة الإحصائيات
+                for (let i = 0; i < buttonCounts.length; i++) {
+                    csvContent += `"${buttonNames[i]}",${buttonCounts[i]}\r\n`;
+                }
+                
+                // إضافة المجموع
+                csvContent += `"إجمالي عدد المنافذ",${totalCount}\r\n`;
+                
+                // إضافة الملاحظات
+                if (notesList.length > 0) {
+                    csvContent += "\r\n";
+                    csvContent += "الملاحظات\r\n";
+                    csvContent += "رقم الملاحظة,اسم المنفذ,الملاحظة\r\n";
+                    
+                    notesList.forEach(note => {
+                        csvContent += `${note.number},"${note.outletName}","${note.text}"\r\n`;
+                    });
+                }
+                
+                // إنشاء ملف CSV وتنزيله
+                const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `تقرير_${dateStr}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // التنظيف
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+                
+                showStatusMessage("تم تنزيل التقرير بنجاح كملف CSV");
+                
+            } catch (error) {
+                console.error("حدث خطأ أثناء إنشاء الملف CSV:", error);
+                showStatusMessage("حدث خطأ أثناء إنشاء التقرير", false);
+            }
+        }
+        
+        // إعادة تعيين التقرير الحالي
+        function resetCurrentReport() {
+            // إعادة تعيين التقرير الحالي بالكامل
+            totalCount = 0;
+            buttonCounts = [0, 0, 0, 0, 0, 0, 0];
+            lastPressedButton = null;
+            canUndo = false;
+            notesList = [];
+            
+            // تحديث واجهة المستخدم
+            setDefaultDate();
+            updateCounter();
+            reportElement.style.display = 'none';
+            noteForm.style.display = 'none';
+            
+            // مسح الجدول الحالي (إبقاء الصف الأول)
+            while (reportTable.rows.length > 1) {
+                reportTable.deleteRow(1);
+            }
+            
+            showStatusMessage("تم إنشاء تقرير جديد بنجاح");
+        }
+        
+        // إعداد التطبيق
+        function initApp() {
+            // تعيين التاريخ الافتراضي
+            setDefaultDate();
+            
+            // إضافة معالجات الأحداث
+            btn1.addEventListener('click', () => handleButtonClick(0));
+            btn2.addEventListener('click', () => handleButtonClick(1));
+            btn3.addEventListener('click', () => handleButtonClick(2));
+            btn4.addEventListener('click', () => handleButtonClick(3));
+            btn5.addEventListener('click', () => handleButtonClick(4));
+            btn6.addEventListener('click', () => handleButtonClick(5));
+            btn7.addEventListener('click', () => handleButtonClick(6));
+            
+            reportBtn.addEventListener('click', generateReport);
+            downloadBtn.addEventListener('click', downloadCSV);
+            
+            newReportBtn.addEventListener('click', () => {
+                if (totalCount > 0) {
+                    modalMessage.textContent = "هل أنت متأكد أنك تريد إنشاء تقرير جديد؟ سيتم حذف جميع البيانات الحالية.";
+                    confirmModal.style.display = 'block';
+                } else {
+                    resetCurrentReport();
+                }
+            });
+            
+            undoBtn.addEventListener('click', () => {
+                if (lastPressedButton === null && !canUndo) {
+                    showStatusMessage("لا يوجد ضغطات سابقة للتراجع عنها", false);
+                    return;
+                }
+                
+                if (confirm("هل أنت متأكد أنك تريد التراجع عن آخر ضغطة؟")) {
+                    if (undoLastPress()) {
+                        showStatusMessage("تم التراجع عن آخر ضغطة بنجاح");
+                    } else {
+                        showStatusMessage("لا يمكن التراجع الآن", false);
+                    }
+                }
+            });
+            
+            noteBtn.addEventListener('click', () => {
+                currentNoteNumber = totalCount;
+                noteForm.style.display = 'block';
+            });
+            
+            saveNoteBtn.addEventListener('click', () => {
+                const outletName = outletNameInput.value.trim();
+                const noteText = noteTextInput.value.trim();
+                
+                if (outletName && noteText) {
+                    notesList.push({
+                        number: currentNoteNumber,
+                        outletName: outletName,
+                        text: noteText
+                    });
+                    
+                    outletNameInput.value = '';
+                    noteTextInput.value = '';
+                    noteForm.style.display = 'none';
+                    showStatusMessage("تم حفظ الملاحظة بنجاح");
+                } else {
+                    showStatusMessage("الرجاء ملء جميع الحقول", false);
+                }
+            });
+            
+            cancelNoteBtn.addEventListener('click', () => {
+                outletNameInput.value = '';
+                noteTextInput.value = '';
+                noteForm.style.display = 'none';
+            });
+            
+            confirmYes.addEventListener('click', () => {
+                confirmModal.style.display = 'none';
+                resetCurrentReport();
+            });
+            
+            confirmNo.addEventListener('click', () => {
+                confirmModal.style.display = 'none';
+            });
+            
+            // إغلاق النافذة المنبثقة عند النقر خارجها
+            window.addEventListener('click', (event) => {
+                if (event.target === confirmModal) {
+                    confirmModal.style.display = 'none';
+                }
+            });
+        }
+        
+        // بدء التطبيق عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
